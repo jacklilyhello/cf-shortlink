@@ -11,15 +11,16 @@
       button { cursor: pointer; background: #2563eb; color: #fff; border: none; border-radius: 8px; }
       .hidden { display: none; }
       .card { border: 1px solid #e5e7eb; padding: 1rem; border-radius: 12px; }
+      .modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; padding: 1rem; }
+      .modal-content { background: #fff; border-radius: 12px; max-width: 480px; width: 100%; padding: 1.5rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); }
+      .short-url { word-break: break-all; margin: 0.5rem 0 1rem; font-weight: 600; }
+      .actions { display: flex; gap: 0.5rem; }
+      .secondary { background: #e5e7eb; color: #111827; }
     </style>
   </head>
   <body>
     <h1>Cloudflare 短链接</h1>
-    <p>匿名用户每个浏览器仅可创建一次短链接。</p>
-
-    <div id="blocked" class="card hidden">
-      <p>你已经创建过短链接啦，本工具每个浏览器仅可创建一次。</p>
-    </div>
+    <p>匿名用户可无限次创建短链接，生成后不可修改或删除。</p>
 
     <form id="form" class="card">
       <label>
@@ -34,17 +35,24 @@
       <p id="message"></p>
     </form>
 
-    <script>
-      const storageKey = 'SHORTLINK_CREATED';
-      const created = localStorage.getItem(storageKey);
-      const form = document.getElementById('form');
-      const blocked = document.getElementById('blocked');
-      const message = document.getElementById('message');
+    <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-content">
+        <h2>短链接已生成</h2>
+        <p id="short-url-text" class="short-url"></p>
+        <div class="actions">
+          <button id="copy-btn" type="button">复制链接</button>
+          <button id="close-btn" type="button" class="secondary">关闭</button>
+        </div>
+      </div>
+    </div>
 
-      if (created) {
-        form.classList.add('hidden');
-        blocked.classList.remove('hidden');
-      }
+    <script>
+      const form = document.getElementById('form');
+      const message = document.getElementById('message');
+      const modal = document.getElementById('modal');
+      const copyBtn = document.getElementById('copy-btn');
+      const closeBtn = document.getElementById('close-btn');
+      const shortUrlText = document.getElementById('short-url-text');
 
       form?.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -66,11 +74,33 @@
           }
 
           const payload = await res.json();
-          localStorage.setItem(storageKey, '1');
-          window.location.href = `/created?code=${encodeURIComponent(payload.code)}`;
+          const shortUrl = `${window.location.origin}/${payload.code}`;
+          shortUrlText.textContent = shortUrl;
+          modal.classList.remove('hidden');
+          message.textContent = '';
         } catch (error) {
           message.textContent = error.message;
         }
+      });
+
+      copyBtn?.addEventListener('click', async () => {
+        const text = shortUrlText?.textContent?.trim();
+        if (!text) return;
+        try {
+          await navigator.clipboard.writeText(text);
+          message.textContent = '已复制到剪贴板';
+        } catch (error) {
+          message.textContent = '复制失败，请手动复制';
+        }
+      });
+
+      const closeModal = () => {
+        modal.classList.add('hidden');
+      };
+
+      closeBtn?.addEventListener('click', closeModal);
+      modal?.addEventListener('click', (event) => {
+        if (event.target === modal) closeModal();
       });
     </script>
   </body>
