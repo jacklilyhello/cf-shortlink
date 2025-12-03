@@ -70,6 +70,17 @@ npm run dev
    - 访问首页创建短链成功后，会重定向到 `/created?code=...`。
    - 访问 `/:code` 应跳转到目标链接。
    - 在 `/admin` 输入 `ADMIN_TOKEN` 进行后台管理。
+## 部署要点
+- 在 Cloudflare Pages 绑定 `pages/` 目录。
+- 同域路由绑定 Worker，配置 D1 数据库并设置环境变量：
+  - `ADMIN_TOKEN`：管理员 Bearer Token。
+- 使用 `schema.sql` 初始化 D1：
+  ```bash
+  wrangler d1 migrations create --name init --database shortlinks
+  # 将 schema.sql 内容拷贝到迁移文件，再执行
+  wrangler d1 migrations apply shortlinks
+  ```
+
 
 ## API 速览
 - `POST /api/create`：{ url, note? } → { code }
