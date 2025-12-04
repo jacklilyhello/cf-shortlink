@@ -9,7 +9,7 @@ Cloudflare Pages + Workers 的无服务器短链接系统：匿名用户可无�
 - **存储**：D1 数据库存储短链映射，默认软删除记录。
 
 ## 项目结构
-- `pages/`：Cloudflare Pages 静态文件
+- `pages/`：Cloudflare Pages 静态文件（通过 `npm run build:pages` 生成 `dist/` 输出，支持环境变量注入 API 地址）
   - `/`：匿名创建页
   - `/created`：创建成功展示页
   - `/admin`：简易后台（输入 Token 后管理）
@@ -62,9 +62,10 @@ npm run dev
    - 在 Cloudflare 控制台中为 Worker 添加路由（示例 `https://short.example.com/*`），需与 Pages 自定义域一致，这样 `/api/*` 与 `/:code` 都由 Worker 处理。
 
 4) **部署 Pages（前端）**
-   - 在 Cloudflare Pages 创建新项目，选择「从 Git 导入」，仓库根目录保持默认，构建输出目录填 `pages`（本项目为纯静态无需构建命令）。
+   - 在 Cloudflare Pages 创建新项目，选择「从 Git 导入」，**构建命令**填 `npm run build:pages`，**输出目录**填 `dist`。
+   - 在 Pages 环境变量里新增 `API_BASE`，值为 Worker 对外地址（例如 `https://short.example.com` 或 `https://your-worker.workers.dev`），前端会自动用它拼接 `/api/*` 请求；留空则使用相对路径。
    - 绑定自定义域（例如 `short.example.com`）。
-   - Pages 部署完成后，同域的 Worker 路由即可响应 `/api/*` 与短链跳转，前端直接使用相对路径 fetch。
+   - Pages 部署完成后，同域的 Worker 路由即可响应 `/api/*` 与短链跳转，前端将根据 `API_BASE` 请求后端。
 
 5) **验证**
    - 访问首页创建短链成功后，会弹出窗口显示短链并支持一键复制（如需单独页面展示，可访问 `/created?code=...`）。

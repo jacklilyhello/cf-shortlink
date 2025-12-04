@@ -23,6 +23,7 @@
     <h1>Cloudflare 短链接</h1>
     <p>匿名用户可无限次创建短链接，生成后不可修改或删除。</p>
 
+    <script src="/config.js"></script>
     <form id="form" class="card">
       <label>
         目标地址：
@@ -54,6 +55,8 @@
       const copyBtn = document.getElementById('copy-btn');
       const closeBtn = document.getElementById('close-btn');
       const shortUrlText = document.getElementById('short-url-text');
+      const apiBase = (window.__API_BASE__ || '').replace(/\/$/, '');
+      const buildApi = (path) => `${apiBase}${path}`;
 
       form?.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -63,7 +66,7 @@
         const note = data.get('note');
 
         try {
-          const res = await fetch('/api/create', {
+          const res = await fetch(buildApi('/api/create'), {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({ url, note }),

@@ -17,6 +17,7 @@
     <h1>后台管理</h1>
     <p>使用 Bearer Token 进行管理，令牌由环境变量 ADMIN_TOKEN 提供。</p>
 
+    <script src="/config.js"></script>
     <label>
       管理员 Token：
       <input type="password" id="token" placeholder="粘贴 ADMIN_TOKEN" />
@@ -43,6 +44,8 @@
       const rows = document.getElementById('rows');
       const message = document.getElementById('message');
       const tokenInput = document.getElementById('token');
+      const apiBase = (window.__API_BASE__ || '').replace(/\/$/, '');
+      const buildApi = (path) => `${apiBase}${path}`;
 
       tokenInput.value = localStorage.getItem('ADMIN_TOKEN') || '';
 
@@ -63,7 +66,7 @@
         }
 
         try {
-          const res = await fetch('/api/admin/links', {
+          const res = await fetch(buildApi('/api/admin/links'), {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (!res.ok) throw new Error('加载失败');
@@ -129,7 +132,7 @@
       }
 
       async function request(url, method, body, token) {
-        const res = await fetch(url, {
+        const res = await fetch(buildApi(url), {
           method,
           headers: {
             'content-type': 'application/json',
